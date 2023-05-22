@@ -19,28 +19,24 @@ class ProgramController extends Controller
 
     public function showProgram()
     {
-        $datas = DB::tables('programs')->get();
-        // $datas = Program::get();
-
-
+        $datas = Program::get();
+        $count=0;
+       
             return DataTables::of($datas)->addIndexColumn()
-            // ->addColumn('display', function ($row) {
-            //     if ($row->is_visible === 1) {
-
-            //         $btn = '<a href="#" class="text-center btn btn-success btn-sm"><i class="fas fa-check"></i></a>';
-            //     } else {
-            //         $btn = '<a href="#" class="text-center btn btn-danger btn-circle"><i class="fas fa-times"></i></a>';
-            //     }
-
-            //     return $btn;
-            // })
-            // ->addColumn('action', function ($row) {
-
-            //     $btn = '<a href="' . route("edit-gallery", ['id' => $row->id]) . '" class="btn btn-success btn-sm"><i class="fas fa-edit"></i></a>
-            //     <a href="' . route("delete-gallery", ['id' => $row->id]) . '" class="btn btn-danger  btn-sm"><i class="fas fa-trash"></i></a>';
-
-            //     return $btn;
-            // })->rawColumns(['display', 'action'])
+            ->addColumn('count', function ($row) {                
+                static $count = 1;
+                return $count++;
+            })
+            ->addColumn('checkbox', function ($row) {
+                $url1 = '<input type="checkbox" class="checkbox-input" name="array_check"  value="'.$row->id.'"/>';
+                return $url1;
+            })
+            ->addColumn('image', function ($row) {
+                $url = url("Program/Image/" . $row->featured_image);
+                $url1 = '<img src="' . $url . '" alt="" width="80" height="80">';
+                return $url1;
+            })
+            ->rawColumns(['image','checkbox','count'])
             ->make(true);
     }
 
@@ -53,34 +49,45 @@ class ProgramController extends Controller
     public function storeProgram(Request $request)
     {
         try {
-            $validator = Validator::make($request->all(), [
-                'program.*.title' => 'required',
-                'program.*.type' => 'required',
-                'program.*.activities' => 'required',
-                'program.*.images' => 'required|image',
-                'program.*.brief' => 'required',
-            ]);
-    
-            if ($validator->fails()) {
-                throw new ValidationException($validator);
-            }
-            foreach ($request->program as $program) {
-                $imagefile = $program['images']->getClientOriginalName();
-                $program['images']->move(public_path('Program/Image'), $imagefile);
+            for($i=0;$i<count($request->title);$i++)
+            {
+                $imagefile =$request->images[$i]->getClientOriginalName();
+                $request->images[$i]->move(public_path('Program/Image'), $imagefile);
     
                 Program::insert([
-                    'program_title' => $program['title'],
-                    'type' => $program['type'],
-                    'activities' => $program['activities'],
+                    'program_title' => $request->title[$i],
+                    'type' => $request->type[$i],
+                    'activities' => $request->activities[$i],
                     'featured_image' => $imagefile,
-                    'brief_intro' => $program['brief'],
+                    'brief_intro' =>$request->brief[$i], 
                 ]);
             }
+         
+        
             return redirect()->to('/')->with('success', 'Programs successfully inserted.');
         } catch (ValidationException $e) {
             return redirect()->back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Error occurred while inserting programs.');
+        }
+    }
+
+    public function deleteProgram(Request $request)
+    {
+        $checkedArray = $request->input('checkedArray');
+
+        $count = 0;
+        foreach($checkedArray as $check)
+        {
+            DB::table('programs')->where('id',intval($check))->delete();
+            $count++;
+        }
+        if(count($checkedArray) == $count)
+        {
+            return response()->json([
+                'message'=>'Programs deleted successfully',
+                'statuscode'=>200
+            ]);
         }
     }
 

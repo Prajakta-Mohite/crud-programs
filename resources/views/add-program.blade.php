@@ -16,12 +16,12 @@
                 <div class="alert alert-warning">
                     All fields are required !
                 </div>
-              
+
 
                 <div class="my-2">
                     <button type="button" name="add" id="add" class="btn btn-success">Add More</button>
                 </div>
-                <form id="quickForm" action="{{ route('store-program') }}" method="POST" accept-charset="utf-8"
+                <form id="quickForm" action="{{route('store-program')}}" method="POST" accept-charset="utf-8"
                     enctype="multipart/form-data">
                     @csrf
                     <table id="gallery_table" class="table table-bordered student_table">
@@ -35,43 +35,31 @@
                                 <th>Action</th>
                             </tr>
                         </thead>
-                        <tbody id="dynamicTable">                          
+                        <tbody id="dynamicTable">
                             <tr>
                                 <td>
-                                    <input type="text" name="program[0][title]" value="{{ old('program.0.title') }}"  class="form-control" autocomplete="off"
-                                        placeholder="Program Title">
-                                    @error('program.0.title')
-                                    <p class="text-danger">{{ $message }}</p>
-                                    @enderror
+                                    <input type="text" name="title[]" 
+                                        class="form-control program_title" autocomplete="off" placeholder="Program Title">
                                 </td>
                                 <td>
-                                    <input type="text" name="program[0][type]"  value="{{ old('program.0.type') }}" class="form-control" autocomplete="off"
-                                        placeholder="Program Type">
-                                    @error('program.0.type')
-                                    <p class="text-danger">{{ $message }}</p>
-                                    @enderror
+                                    <input type="text" name="type[]"
+                                        class="form-control program_type" autocomplete="off" placeholder="Program Type">
                                 </td>
                                 <td>
-                                    <input type="text" name="program[0][activities]" class="form-control"  value="{{ old('program.0.activities') }}"
-                                        autocomplete="off" placeholder="Program Activities">
-                                    @error('program.0.activities')
-                                    <p class="text-danger">{{ $message }}</p>
-                                    @enderror
+                                    <input type="text" name="activities[]" class="form-control program_activities"
+                                         autocomplete="off"
+                                        placeholder="Program Activities">
                                 </td>
                                 <td>
-                                    <input type="file" name="program[0][images]" value="{{ old('program.0.images') }}" class="form-control mb-3">
-                                    @error('program.0.images')
-                                    <p class="text-danger">{{ $message }}</p>
-                                    @enderror
+                                    <input type="file" name="images[]" class="form-control mb-3 program_image">
+                                </td>
+                                <td>
+                                    <textarea class="form-control mb-3 program_brief"  name="brief[]"></textarea>
                                     
                                 </td>
                                 <td>
-                                    <textarea class="form-control mb-3"  value="{{ old('program.0.brief') }}" name="program[0][brief]"></textarea>
-                                    @error('program.0.brief')
-                                    <p class="text-danger">{{ $message }}</p>
-                                    @enderror
+                                    
                                 </td>
-                                <td></td>
                             </tr>
                             <!-- Rest of the code -->
                         </tbody>
@@ -89,17 +77,67 @@
         var i = 0;
 
         $("#add").click(function() {
+            addValidationRules();
             ++i;
 
-            $("#dynamicTable").append(`<tr><td><input type="text" name="program[+i+][title]" value="{{ old('program.+i+.title') }}"  class="form-control" autocomplete="off" placeholder="Program Title">@error('program.+i+.title')<p class="text-danger">{{ 'title field is required' }}</p>@enderror</td><td><input type="text" name="program[+i+][type]"  value="{{ old('program.+i+.type') }}" class="form-control" autocomplete="off" placeholder="Program Type">@error('program.+i+.type')<p class="text-danger">{{ $message }}</p>@enderror</td><td><input type="text" name="program[+i+][activities]" class="form-control"  value="{{ old('program.+i+.activities') }}" autocomplete="off" placeholder="Program Activities">@error('program.+i+.activities')<p class="text-danger">{{ $message }}</p>@enderror</td><td><input type="file" name="program[+i+][images]" value="{{ old('program.+i+.images') }}" class="form-control mb-3">@error('program.+i+.images')<p class="text-danger">{{ $message }}</p>@enderror</td><td><textarea class="form-control mb-3"  value="{{ old('program.+i+.brief') }}" name="program[+i+][brief]"></textarea>@error('program.+i+.brief')<p class="text-danger">{{ $message }}</p>@enderror</td><td></td><td><button type="button"  class="btn btn-danger remove-tr btn-sm">Remove</button></td></tr>`
-);
-
+            $("#dynamicTable").append(
+                `   <tr>
+                                <td>
+                                    <input type="text" name="title[]" 
+                                        class="form-control program_title" autocomplete="off" placeholder="Program Title">
+                                </td>
+                                <td>
+                                    <input type="text" name="type[]"
+                                        class="form-control program_type" autocomplete="off" placeholder="Program Type">
+                                </td>
+                                <td>
+                                    <input type="text" name="activities[]" class="form-control program_activities"
+                                         autocomplete="off"
+                                        placeholder="Program Activities">
+                                </td>
+                                <td>
+                                    <input type="file" name="images[]" class="form-control mb-3 program_image">
+                                </td>
+                                <td>
+                                    <textarea class="form-control mb-3 program_brief"  name="brief[]"></textarea>
+                                    
+                                </td>
+                                <td>
+                                    
+                                </td>
+                            </tr>`
+            );
+           
         });
-
+        
         $(document).on('click', '.remove-tr', function() {
             $(this).parents('tr').remove();
         });
     });
-    </script>
+
+ 
+        function addValidationRules(){
+            $('.program_title').each((i,e)=>{
+                $(e).rules("add",{required:true})
+            });  
+            $('.program_type').each((i,e)=>{
+                $(e).rules("add",{required:true})
+            });  
+            $('.program_activities').each((i,e)=>{
+                $(e).rules("add",{required:true})
+            });  
+            $('.program_image').each((i,e)=>{
+                $(e).rules("add",{required:true,extension: "jpg|jpeg|png"})
+            });   
+            $('.program_brief').each((i,e)=>{
+                $(e).rules("add",{required:true})
+            });  
+        }
+        $('#quickForm').validate();
+        addValidationRules();
+       
+    
+   
+   </script>
 
     @endsection

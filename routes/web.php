@@ -21,3 +21,4 @@ Route::get('/', [ProgramController::class, 'index'])->name('home');
 Route::get('/show-program', [ProgramController::class, 'showProgram'])->name('show-program');
 Route::get('/add-program', [ProgramController::class, 'addProgram'])->name('add-program');
 Route::post('/store-program', [ProgramController::class, 'storeProgram'])->name('store-program');
+Route::post('/delete-program', [ProgramController::class, 'deleteProgram'])->name('delete-program');

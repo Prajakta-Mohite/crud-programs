@@ -12,8 +12,6 @@ class ProgramController extends Controller
 {
     public function index()
     {
-        // $datas = Program::get();
-        // dd($datas); 
         return view('show');
     }
 
@@ -36,7 +34,12 @@ class ProgramController extends Controller
                 $url1 = '<img src="' . $url . '" alt="" width="80" height="80">';
                 return $url1;
             })
-            ->rawColumns(['image','checkbox','count'])
+            ->addColumn('action', function ($row) {
+
+                $btn = '<a href="' . route("single-edit-program", ['id' => $row->id]) . '" class="btn btn-success btn-sm">Edit</a>';
+                return $btn;
+            })
+            ->rawColumns(['image','checkbox','count','action'])
             ->make(true);
     }
 
@@ -51,6 +54,7 @@ class ProgramController extends Controller
         try {
             for($i=0;$i<count($request->title);$i++)
             {
+              
                 $imagefile =$request->images[$i]->getClientOriginalName();
                 $request->images[$i]->move(public_path('Program/Image'), $imagefile);
     
@@ -72,6 +76,73 @@ class ProgramController extends Controller
         }
     }
 
+    public function editProgram(Request $request)
+    {
+        $checkedArray = $request->input('checkedArray');
+        
+        $checkedArray = explode(',', $checkedArray);
+    
+        $data = Program::whereIn('id', $checkedArray)->get();
+    
+        return view('edit-program', compact('data'));
+    }
+
+   
+    public function updateProgram(Request $request)
+    {
+        $updateprogram = $request->input('program');
+        $count = 0;
+        
+        foreach($updateprogram as $update)
+        {  
+                Program::where('id',$update['id'])->update([
+                    'program_title'=>$update['title'],
+                    'type'=>$update['type'],
+                    'activities'=>$update['activities'],
+                    'brief_intro'=>$update['brief'],
+                ]);
+        }
+            return view('show');
+    }
+
+    public function singleEditProgram($id,Request $request)
+    {
+        $data = Program::where('id', $id)->first();
+    
+        return view('single-edit-program', compact('data'));
+
+    }
+    public function singleUpdateProgram($id,Request $request)
+    {
+        if($request->images)
+        {
+            $imagefile =$request->images->getClientOriginalName();
+            $request->images->move(public_path('Program/Image'), $imagefile);
+    
+            Program::where('id',$id)->update([
+                'program_title'=>$request->title,
+                'type'=>$request->type,
+                'activities'=>$request->activities,
+                'brief_intro'=>$request->brief,
+                'featured_image'=>$imagefile,
+            ]);
+        }
+        else{
+        
+            Program::where('id',$id)->update([
+                'program_title'=>$request->title,
+                'type'=>$request->type,
+                'activities'=>$request->activities,
+                'brief_intro'=>$request->brief,
+            ]);
+        }
+        
+       
+    
+        return view('show');
+
+    }
+
     public function deleteProgram(Request $request)
     {
         $checkedArray = $request->input('checkedArray');
@@ -79,7 +150,7 @@ class ProgramController extends Controller
         $count = 0;
         foreach($checkedArray as $check)
         {
-            DB::table('programs')->where('id',intval($check))->delete();
+            DB::table('programs')->where('id',$check)->delete();
             $count++;
         }
         if(count($checkedArray) == $count)
